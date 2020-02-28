@@ -1,0 +1,5 @@
+pour le level2, cat /etc/passwd | grep flag01 | cut -d ':' -f 2
+
+pour le level5, cat /var/mail.
+
+pour le level11, cat /var/log/boot.log

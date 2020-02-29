@@ -3,3 +3,15 @@ pour le level2, cat /etc/passwd | grep flag01 | cut -d ':' -f 2
 pour le level5, cat /var/mail.
 
 pour le level11, cat /var/log/boot.log
+
+dans le man su, il est question d'une faille de securite potentielle avec su :
+"The independent terminal provides better security as user does not share 
+terminal with the original session.  This allow to avoid TIOCSTI ioctl
+terminal injection and another security attacks against terminal file
+descriptors"
+
+pour le level04 et level12, il y a un dossier dans /var/www (/var/www/level04 
+&& /var/www/level12), ce qui correspond a un site internet.
+
+Il y a un dossier particulier dans /var : drwxrwsrwt 1 root whoopsie ... crash,
+peut-etre interessant pour la suite.

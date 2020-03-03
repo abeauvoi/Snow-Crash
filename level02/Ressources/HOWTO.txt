@@ -1,0 +1,8 @@
+Pour analyzer le fichier level02.pcap, on lance Wireshark en mode GUI.
+Dedans on ouvre le fichier.
+Ensuite on fait "Analyze > Follow > TCP Stream"
+
+Vers la fin on a un champ password avec un mot de passe en clair :
+ft_wandr...NDRel.L0L
+
+Les points correspondent a des backspaces. Donc le mot de passe pour le flag02 est : "ft_waNDReL0L"

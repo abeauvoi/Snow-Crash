@@ -1,3 +1,4 @@
+#!/bin/bash
 # get encrypted password for flag01 user
 cat /etc/passwd | grep flag01 | cut -d: -f 2
 

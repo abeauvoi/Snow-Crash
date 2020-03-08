@@ -1,11 +1,11 @@
-# set breakpoint to first call to getuid
+# set breakpoint to first call of getuid
 s getuid
 # Run the executable
 r
 # Skip two instructions
 ni
 ni
-# Override eax
+# Override eax with the desired uid
 set $eax = 4242
 # Continue execution
 c

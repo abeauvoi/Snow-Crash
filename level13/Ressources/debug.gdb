@@ -1,5 +1,5 @@
 # set breakpoint to first call of getuid
-s getuid
+b getuid
 # Run the executable
 r
 # Skip two instructions

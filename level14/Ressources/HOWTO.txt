@@ -32,6 +32,7 @@ end
 Then we needed a breakpoint at the getuid libcall, so :
 
 (gdb) b getuid
+(gdb) r
 
 The uid returned by getuid is stored in eax, and the assignment takes 2 instructions.
 So we jump to the next instruction twice, with ni.

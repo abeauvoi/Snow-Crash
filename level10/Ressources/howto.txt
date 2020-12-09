@@ -1,0 +1,61 @@
+# By launching the binary without any argument, we get this help message :
+level10@SnowCrash:~$ ./level10
+./level10 file host
+	sends file to host if you have access to it
+
+# A call to access is made on a variable that is probably argv[1],
+# as indicated by the add instruction followed by a dereferencing on the address
+# contained in %eax :
+
+0x08048739 <+101>:	add    $0x4,%eax
+0x0804873c <+104>:	mov    (%eax),%eax
+0x0804873e <+106>:	movl   $0x4,0x4(%esp)
+0x08048746 <+114>:	mov    %eax,(%esp)
+0x08048749 <+117>:	call   0x80485e0 <access@plt>
+
+# The program exits if we do not have access to the file passed as argument.
+
+# There is a hint as to what the program does a little bit further :
+
+0x08048756 <+130>:	mov    $0x8048a7b,%eax
+0x0804875b <+135>:	mov    0x2c(%esp),%edx
+0x0804875f <+139>:	mov    %edx,0x4(%esp)
+0x08048763 <+143>:	mov    %eax,(%esp)
+0x08048766 <+146>:	call   0x8048520 <printf@plt>
+
+(gdb) x/s 0x8048a7b
+0x8048a7b:	 "Connecting to %s:6969 .. "
+
+# The program will connect to an ip on port 6969 if access is granted.
+# Then it will attempt to open, read and write the content of the file on a
+# socket (there is a call to socket() in the source not detailed here) :
+
+(gdb) x/s 0x8048afb
+0x8048afb:	 "Damn. Unable to open file"
+(gdb) x/s 0x8048b33
+0x8048b33:	 "wrote file!"
+(gdb) x/s 0x8048b15
+0x8048b15:	 "Unable to read from file: %s\n"
+
+# This gives us enough information to create an exploit.
+# We're going to use the idea of the previous level.
+# There is a race condition because the program checks access only once.
+# We can create a dummy file, like a soft link, that points towards the token
+# file, and once access is granted, delete the link so that when the program
+# calls open, it will open the target of the link.
+# Finally we'll be able to read the content of the file by listening on the
+# port 6969.
+# The exact steps of the timing attack are in the script race_condition.sh.
+# The result is :
+
+...
+Connecting to 127.0.0.1:6969 .. Connected!
+Sending file .. woupa2yuojeeaaed06riuj63c
+wrote file!
+Connecting to 127.0.0.1:6969 .. Connected!
+Sending file .. wrote file!
+Terminated
+
+level10@SnowCrash:~$ su flag10
+Password:
+Don't forget to launch getflag !

@@ -5,7 +5,8 @@
 # total 12
 # -rwsr-sr-x 1 flag03 level03 8627 Mar  5  2016 level03
 # 
-# We can see that the setuid and setgid bits are set, meaning executing the binary will be run with the file owner's privileges, here flag03.
+# We can see that the setuid and setgid bits are set, meaning executing the
+# binary will be run with the file owner's privileges, here flag03.
 #
 # Using gdb, when disassembling the main, we get this code :
 #
@@ -82,7 +83,8 @@
 # The translated shell call becomes :
 # /bin/sh -c "/usr/bin/env echo Exploit me"
 #
-# So without setresuid(), calling system would reset the effective UID (3003) to the real UID (2003) of the calling process.
+# So without setresuid(), calling system would reset the effective UID (3003) to
+# the real UID (2003) of the calling process.
 # The real UID of the calling process is :
 #
 # level03@SnowCrash:~$ id
@@ -93,12 +95,18 @@
 # level03@SnowCrash:~$ id flag03
 # >>uid=3003(flag03)<< gid=3003(flag03) groups=3003(flag03),1001(flag)
 # 
-# With all this information, we guessed that we needed to find a way to execute a command on behalf of the file owner, flag03. 
-# This mean we could bypass su's password checking and directly invoke getflag, or bash.
-# Since this program uses env to execute a command, it means modifying the env could influence the behavior of the program.
-# Since the binary invoked by env is echo, we're going to modify the PATH variable so that env finds a malicious version of echo first.
-# This is how we did it (/var/crash is the first directory I found where I could create a file) :
+# With all this information, we can guess that we need to find a way to execute
+# a command on behalf of the file owner, flag03. 
+# This mean we could bypass su's password checking and directly invoke getflag,
+# or bash.
+# Since this program uses env to execute a command, it means modifying the env
+# could influence the behavior of the program.
+# Since the binary invoked by env is echo, we're going to modify the PATH
+# variable so that env finds a malicious version of echo first.
+# This is how we did it
+# (/var/crash is the first directory I found where I could create a file) :
 
-echo -n "/bin/getflag" > /var/crash/echo # (on peut aussi choisir bash au lieu de getflag).
+# (on peut aussi choisir bash au lieu de getflag).
+echo -n "/bin/getflag" > /var/crash/echo
 chmod +x /var/crash/echo
 PATH=/var/crash ./level03

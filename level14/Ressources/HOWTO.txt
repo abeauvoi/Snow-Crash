@@ -1,50 +1,82 @@
-Since there were no source files, we figured out we had to disassemble /bin/getflag directly to exploit it.
+Since there were no source files, we figured out we had to disassemble
+/bin/getflag directly to exploit it.
 
-When disassembling the main function, we identified a syscall to the function ptrace.
+When disassembling the main function, we can see a call to the syscall ptrace :
 
-Dump of assembler code for function main:
-0x08048946 <+0>:	push   %ebp
-0x08048947 <+1>:	mov    %esp,%ebp
-0x08048949 <+3>:	push   %ebx
-0x0804894a <+4>:	and    $0xfffffff0,%esp
-0x0804894d <+7>:	sub    $0x120,%esp
-0x08048953 <+13>:	mov    %gs:0x14,%eax
-0x08048959 <+19>:	mov    %eax,0x11c(%esp)
-0x08048960 <+26>:	xor    %eax,%eax
-0x08048962 <+28>:	movl   $0x0,0x10(%esp)
-0x0804896a <+36>:	movl   $0x0,0xc(%esp)
-0x08048972 <+44>:	movl   $0x1,0x8(%esp)
-0x0804897a <+52>:	movl   $0x0,0x4(%esp)
-0x08048982 <+60>:	movl   $0x0,(%esp)
-=> 0x08048989 <+67>:	call   0x8048540 <ptrace@plt>
-0x0804898e <+72>:	test   %eax,%eax
+	Dump of assembler code for function main:
+	0x08048946 <+0>:	push   %ebp
+	0x08048947 <+1>:	mov    %esp,%ebp
+	0x08048949 <+3>:	push   %ebx
+	0x0804894a <+4>:	and    $0xfffffff0,%esp
+	0x0804894d <+7>:	sub    $0x120,%esp
+	0x08048953 <+13>:	mov    %gs:0x14,%eax
+	0x08048959 <+19>:	mov    %eax,0x11c(%esp)
+	0x08048960 <+26>:	xor    %eax,%eax
+	0x08048962 <+28>:	movl   $0x0,0x10(%esp)
+	0x0804896a <+36>:	movl   $0x0,0xc(%esp)
+	0x08048972 <+44>:	movl   $0x1,0x8(%esp)
+	0x0804897a <+52>:	movl   $0x0,0x4(%esp)
+	0x08048982 <+60>:	movl   $0x0,(%esp)
+	=> 0x08048989 <+67>:	call   0x8048540 <ptrace@plt>
+	0x0804898e <+72>:	test   %eax,%eax
 
-As we can see here, right after the ptrace syscall, a test instruction checks the value of %eax, basically the return value of ptrace.
+Ptrace can be used to prevent a program from being debugged.
+We can see an interesting string passed to puts() further down :
 
-We can create a catchpoint for the syscall and modify its return value, like so :
+	0x08048992 <+76>:	movl   $0x8048fa8,(%esp)
+	0x08048999 <+83>:	call   0x80484e0 <puts@plt>
 
-catch syscall ptrace
-commands 1
-set ($eax) = 0
-continue
-end
+(gdb) x/s 0x8048fa8
+0x8048fa8:	 "You should not reverse this"
 
-Then we needed a breakpoint at the getuid libcall, so :
+The test instruction verifies if ptrace returned 1. If that's the case, the
+program exits :
 
-(gdb) b getuid
-(gdb) r
+	0x0804899e <+88>:	mov    $0x1,%eax
+	0x080489a3 <+93>:	jmp    0x8048eb2 <main+1388>
+	...
+	0x08048eb2 <+1388>:	mov    0x11c(%esp),%edx
+	0x08048eb9 <+1395>:	xor    %gs:0x14,%edx
+	0x08048ec0 <+1402>:	je     0x8048ec7 <main+1409>
+	0x08048ec2 <+1404>:	call   0x80484a0 <__stack_chk_fail@plt>
+	0x08048ec7 <+1409>:	mov    -0x4(%ebp),%ebx
+	0x08048eca <+1412>:	leave
+	0x08048ecb <+1413>:	ret
 
-The uid returned by getuid is stored in eax, and the assignment takes 2 instructions.
-So we jump to the next instruction twice, with ni.
-Once at the right address, we override the value of %eax :
+Since ptrace is a syscall, we can create a catchpoint and set its return value
+to 0 (the relevant gdb commands are located in the debug.gdb resource file).
 
-(gdb) set $eax = 3014
+By further analyzing the binary we can see that its structure is rather simple.
+The program checks the user id and depending on its value, jump to a call
+to ft_des() with an encrypted string as argument.
+And once the string is decyphered, it is printed on stdout.
 
-This is the uid of flag14.
+Because the disassembly is rather long, I simply copied a portion of the
+if..else that compares the value returned by getuid() :
 
-Hitting continue (or c) outputs :
+	0x08048afd <+439>:	call   0x80484b0 <getuid@plt>
+	0x08048b02 <+444>:	mov    %eax,0x18(%esp)
+	0x08048b06 <+448>:	mov    0x18(%esp),%eax
+	0x08048b0a <+452>:	cmp    $0xbbe,%eax
+	0x08048b0f <+457>:	je     0x8048ccb <main+901>
+	0x08048b15 <+463>:	cmp    $0xbbe,%eax
+	0x08048b1a <+468>:	ja     0x8048b68 <main+546>
 
-(gdb) c
-Continuing.
+Here 0xbbe is equal to 3006, which is flag06. You can confirm by looking at the
+content of /etc/passwd.
+
+So, in order to get the correct uid, we need to set the return value of getuid
+to 3014, which corresponds to user flag14.
+The final output is :
+
+(gdb) source /tmp/debug2.gdb
+Catchpoint 1 (syscall 'ptrace' [26])
+Breakpoint 2 at 0x8048b02
+
+Catchpoint 1 (call to syscall ptrace), 0xb7fdd428 in __kernel_vsyscall ()
+
+Catchpoint 1 (returned from syscall ptrace), 0xb7fdd428 in __kernel_vsyscall ()
+
+Breakpoint 2, 0x08048b02 in main ()
 Check flag.Here is your token : 7QiHafiNa3HVozsaXkawuYrTstxbpABHD8CPnHJ
-[Inferior 1 (process 2133) exited normally]
+[Inferior 1 (process 3023) exited normally]

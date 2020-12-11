@@ -44,7 +44,7 @@ program exits :
 	0x08048ecb <+1413>:	ret
 
 Since ptrace is a syscall, we can create a catchpoint and set its return value
-to 0 (the relevant gdb commands are located in the debug.gdb resource file).
+to 0 (the relevant gdb commands are located in the cmd.gdb resource file).
 
 By further analyzing the binary we can see that its structure is rather simple.
 The program checks the user id and depending on its value, jump to a call
@@ -69,7 +69,7 @@ So, in order to get the correct uid, we need to set the return value of getuid
 to 3014, which corresponds to user flag14.
 The final output is :
 
-(gdb) source /tmp/debug2.gdb
+(gdb) source /tmp/cmd2.gdb
 Catchpoint 1 (syscall 'ptrace' [26])
 Breakpoint 2 at 0x8048b02
 

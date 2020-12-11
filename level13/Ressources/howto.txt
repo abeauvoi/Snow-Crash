@@ -28,11 +28,11 @@ getuid(). I chose the latter.
 To do so, we can set a breakpoint on the instruction that checks if $eax is
 equal to 4242, and change the register's value before resuming execution.
 
-All that is required here is to copy the debug.gdb resource file somewhere on
+All that is required here is to copy the cmd.gdb resource file somewhere on
 the VM, for example /tmp, then within gdb, source the file to execute
 the instructions it contains :
 
-(gdb) source /tmp/debug.gdb
+(gdb) source /tmp/cmd.gdb
 Breakpoint 1 at 0x804859a
 
 Breakpoint 1, 0x0804859a in main ()

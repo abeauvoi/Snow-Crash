@@ -1,0 +1,40 @@
+When invoking the level13 binary, we get this message :
+
+	level13@SnowCrash:~$ ./level13
+	UID 2013 started us but we we expect 4242
+
+We can see that there is a call to getuid in the main function :
+
+	0x08048595 <+9>:	call   0x8048380 <getuid@plt>
+	0x0804859a <+14>:	cmp    $0x1092,%eax
+
+If the returned value is 0x1092 (4242 in base 10), there is a jump to a call
+to a function named ft_des :
+
+	0x080485cb <+63>:	movl   $0x80486ef,(%esp)
+	0x080485d2 <+70>:	call   0x8048474 <ft_des>
+
+The argument passed to the function is this string :
+
+(gdb) x/s 0x80486ef
+0x80486ef:	 "boe]!ai0FB@.:|L6l@A?>qJ}I"
+
+This looks like an encrypted flag.
+
+Here, there are two ways of doing it, using LD_PRELOAD to change the source
+code of getuid, or simply overwriting the return value of the first call to
+getuid(). I chose the latter.
+
+To do so, we can set a breakpoint on the instruction that checks if $eax is
+equal to 4242, and change the register's value before resuming execution.
+
+All that is required here is to copy the debug.gdb resource file somewhere on
+the VM, for example /tmp, then within gdb, source the file to execute
+the instructions it contains :
+
+(gdb) source /tmp/debug.gdb
+Breakpoint 1 at 0x804859a
+
+Breakpoint 1, 0x0804859a in main ()
+your token is 2A31L79asukciNyi8uppkEuSx
+[Inferior 1 (process 2759) exited with code 050]
